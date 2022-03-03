@@ -138,7 +138,7 @@ Just run Application and you can get the compounding erc20 token list
 
 ## Output
 ```
-CompundingList.json
+CompoundingList.json
 ```
 
 ## Example
