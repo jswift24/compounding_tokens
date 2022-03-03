@@ -1,4 +1,4 @@
-# python_top100_
+# node_compounding_erc20_token_list
 
 App to get the compounding erc20 token list
 
