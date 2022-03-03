@@ -25,7 +25,7 @@ node index.js
 <table role="table">
   <thead>
     <tr>
-    <th>Network</th>
+    <th>Server Name</th>
     <th>Address</th>
     </tr>
   </thead>
