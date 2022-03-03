@@ -22,7 +22,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Define Routes
 
 //Top 100 ETH
-app.use('/', require('./routes/compundingRouter'));
+app.use('/', require('./routes/compoundingRouter'));
 
 const PORT = process.env.PORT || 3001;
 

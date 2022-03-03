@@ -85,7 +85,7 @@ const getBalance = async (walletAddress, tokenAddress) => {
     return balance;
 };
 
-const getCompundingToken = () => {
+const getCompoundingToken = () => {
     return new Promise((resolve, reject) => {
         async function main() {
             try {
@@ -123,38 +123,31 @@ const getCompundingToken = () => {
                         if (tempBalance === currentBalance){
                             continue;
                         } else {
-                            let blockObj;
-                            if (tempTransactionList[j].length == 1) {
-                                blockObj = {
-                                    coinAddress : tempTransactionList[j][0].address,
-                                    walletAddress : addresses[i],
-                                    blocks : [
-                                        {
-                                            blockNumber : tempTransactionList[j][0].block_number,
-                                            balance : tempTransactionList[j][0].value
-                                        }
-                                    ]
-                                }
-                            } else {
-                                blockObj = {
-                                    coinAddress : tempTransactionList[j][0].address,
-                                    walletAddress : addresses[i],
-                                    blocks : [
-                                        {
-                                            blockNumber : tempTransactionList[j][1].block_number,
-                                            balance : tempTransactionList[j][1].value
-                                        },
-                                        {
-                                            blockNumber : tempTransactionList[j][0].block_number,
-                                            balance : tempTransactionList[j][0].value
-                                        }
-                                    ]
+                            if (tempTransactionList[j].length >= 2) {
+                                let blockObj;
+                                if(tempTransactionList[j][1].block_number != tempTransactionList[j][0].block_number) {
+                                    blockObj = {
+                                        coinAddress : tempTransactionList[j][0].address,
+                                        walletAddress : addresses[i],
+                                        blocks : [
+                                            {
+                                                blockNumber : tempTransactionList[j][1].block_number,
+                                                balance : tempTransactionList[j][1].value
+                                            },
+                                            {
+                                                blockNumber : tempTransactionList[j][0].block_number,
+                                                balance : tempTransactionList[j][0].value
+                                            }
+                                        ]
+                                    }
+                                    block.push(blockObj)
                                 }
                             }
-                            block.push(blockObj)
                         }
                     }
-                    result.push(block)
+                    if(block.length >= 1) {
+                        result.push(block)
+                    }
                 }
                 var dictstring = JSON.stringify(result);
                 fs.writeFile("CompoundingList.json", dictstring, (err) => {
@@ -181,5 +174,5 @@ const extractLinks = $ => [
 ];
 
 module.exports = {
-    getCompundingToken
+    getCompoundingToken
 }

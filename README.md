@@ -97,12 +97,12 @@ const getBalance = async (walletAddress, tokenAddress) => {
 };
 ```
 
--getCompundingToken
+-getCompoundingToken
 
 ```
 // This function is called when user send the request to get the compounding token list
 
-const getCompundingToken = () => {
+const getCompoundingToken = () => {
   return new Promise((resolve, reject) => {
     async function main() {
         try {
