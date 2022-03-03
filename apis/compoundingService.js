@@ -125,7 +125,7 @@ const getCompoundingToken = () => {
                         } else {
                             if (tempTransactionList[j].length >= 2) {
                                 let blockObj;
-                                if(tempTransactionList[j][1].block_number != tempTransactionList[j][0].block_number) {
+                                if(tempTransactionList[j][1].block_number != tempTransactionList[j][0].block_number && tempTransactionList[j][1].value.toString() != tempTransactionList[j][0].value.toString()) {
                                     blockObj = {
                                         coinAddress : tempTransactionList[j][0].address,
                                         walletAddress : addresses[i],
