@@ -86,7 +86,10 @@ const getTokenBalances = async (address, block_num, tokenAddress) => {
     
     if (balance) {
         return balance;
-    } else return 0;
+    } else {
+        console.log(address, block_num, tokenAddress)
+        return 0;
+    }
 
 }
 
@@ -139,41 +142,31 @@ const getCompundingToken = () => {
                         if (tempBalance == currentBalance/100000000){
                             continue;
                         } else {
-                            if (tempTransactionList[j].length >= 2) {
-                                let blockObj = {
-                                    coinAddress : "",
-                                    walletAddress : "",
+                            let blockObj = {
+                                coinAddress : "",
+                                walletAddress : "",
+                                blocks : [
+                                    
+                                ]
+                            };
+                            if (tempTransactionList[j].length == 1) {
+                                console.log(i)
+                                blockObj = {
+                                    coinAddress : tempTransactionList[j][0].address,
+                                    walletAddress : addresses[i],
                                     blocks : [
-                                        
-                                    ]
-                                };
-                                for (var x = 0; x < tempTransactionList[j].length -1; x ++) {
-                       
-                                    if ( tempTransactionList[j][x].block_number * 1 == tempTransactionList[j][x+1].block_number * 1 + 1 ){
-                                        let getTokenBalance1 = await getTokenBalances(addresses[i], tempTransactionList[j][x + 1].block_number, tempTransactionList[j][x].address)
-                                        let getTokenBalance2 = await getTokenBalances(addresses[i], tempTransactionList[j][x].block_number, tempTransactionList[j][x].address)
-                                        blockObj = {
-                                            coinAddress : tempTransactionList[j][x].address,
-                                            walletAddress : addresses[i],
-                                            blocks : [
-                                                {
-                                                    blockNumber : tempTransactionList[j][x + 1].block_number,
-                                                    balance : getTokenBalance1
-                                                },
-                                                {
-                                                    blockNumber : tempTransactionList[j][x].block_number,
-                                                    balance : getTokenBalance2
-                                                }
-                                            ]
+                                        {
+                                            blockNumber : tempTransactionList[j][0].block_number * 1 - 2,
+                                            balance : currentBalance
+                                        },
+                                        {
+                                            blockNumber : tempTransactionList[j][0].block_number * 1 - 1,
+                                            balance : tempTransactionList[j][0].value
                                         }
-                                        block.push(blockObj)
-                                    }
-                                    if( blockObj.blocks.length == 0){
-                                        continue;
-                                    } else {
-                                        break;
-                                    }
+                                       
+                                    ]
                                 }
+                                block.push(blockObj)
                             }
                         }
                     }
