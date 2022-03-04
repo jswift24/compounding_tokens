@@ -112,18 +112,28 @@ const getCompundingToken = () => {
         async function main() {
             try {
                 var addresses = [];
-                for (var i = 1; i < 5; i++) {
-                    URL = "https://etherscan.io/accounts/" + i.toString();
+                let cnt = 0;
+                let compoundingTokenList = [];
+                while(1) {
+                    cnt++;
+                    URL = "https://etherscan.io/accounts/" + cnt.toString();
+                    var midAddress = [];
                     await axios.get(URL).then(({ data }) => {
                         const $ = cheerio.load(data); // Initialize cheerio 
                         const tempAddresses = extractLinks($);
                         for (var j = 0; j < tempAddresses.length; j++) {
-                            addresses.push(tempAddresses[j]);
+                            midAddress.push(tempAddresses[j]);
                         }
-
                     });
+                    for (var i = 0; i < midAddress.length; i++) {
+                        let isContract = await Web3Client.eth.getCode(midAddress[i]);
+                        if (isContract.length == 2){
+                            addresses.push(midAddress[i])
+                        }
+                    }
+                    if (addresses.length >= 100) break;
                 }
-                for (var i = 0; i < 100; i++) {
+                for (var i = 50; i < 100; i++) {
                     let tempTransactionList = await getTokenTransfers(addresses[i]);
                     let block = [];
                     for (var j = 0; j < tempTransactionList.length; j++) {
@@ -142,31 +152,42 @@ const getCompundingToken = () => {
                         if (tempBalance == currentBalance/100000000){
                             continue;
                         } else {
-                            let blockObj = {
-                                coinAddress : "",
-                                walletAddress : "",
-                                blocks : [
-                                    
-                                ]
-                            };
-                            if (tempTransactionList[j].length == 1) {
-                                console.log(i)
-                                blockObj = {
-                                    coinAddress : tempTransactionList[j][0].address,
-                                    walletAddress : addresses[i],
-                                    blocks : [
-                                        {
-                                            blockNumber : tempTransactionList[j][0].block_number * 1 - 2,
-                                            balance : currentBalance
-                                        },
-                                        {
-                                            blockNumber : tempTransactionList[j][0].block_number * 1 - 1,
-                                            balance : tempTransactionList[j][0].value
-                                        }
-                                       
-                                    ]
+                            let flag = 0;
+                            for (var x = 0; x < compoundingTokenList.length; x++) {
+                                if (tempTransactionList[j][0].address == compoundingTokenList[x]) {
+                                    flag = 1;
+                                    break;
                                 }
-                                block.push(blockObj)
+                            }
+                            if (flag == 0) {
+                                compoundingTokenList.push(tempTransactionList[j][0].address);
+
+                                let blockObj = {
+                                    coinAddress : "",
+                                    walletAddress : "",
+                                    blocks : [
+                                        
+                                    ]
+                                };
+                                if (tempTransactionList[j].length == 1) {
+                                    console.log(i)
+                                    blockObj = {
+                                        coinAddress : tempTransactionList[j][0].address,
+                                        walletAddress : addresses[i],
+                                        blocks : [
+                                            {
+                                                blockNumber : tempTransactionList[j][0].block_number * 1 - 2,
+                                                balance : currentBalance
+                                            },
+                                            {
+                                                blockNumber : tempTransactionList[j][0].block_number * 1 - 1,
+                                                balance : tempTransactionList[j][0].value
+                                            }
+                                           
+                                        ]
+                                    }
+                                    block.push(blockObj)
+                                }
                             }
                         }
                     }
