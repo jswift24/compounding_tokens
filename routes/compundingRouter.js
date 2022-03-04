@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { getCompoundingToken } = require('../apis/compoundingService');
+const { getCompundingToken } = require('../apis/compoundingService');
 
 router.get('/', async (req, res) => {
     try {
-        getCompoundingToken()
+        getCompundingToken()
         .then((data) =>{
             res.json(data);
         })
