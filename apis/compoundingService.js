@@ -6,9 +6,9 @@ const fs = require('fs');
 
 const Web3Client = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"));
 
-const serverUrl = "https://53dgjokc0trq.usemoralis.com:2053/server";
+const serverUrl = "https://yf629zawwibk.usemoralis.com:2053/server";
 
-const appId = "Ya9oUVMjeupUa0Fvw2cZ4msiM7566PkaOi25IeRg";
+const appId = "d9NSLnMkVB2yKgeuYIP5qB12KIBcYlaKLiphzMl4";
 
 Moralis.start({ serverUrl, appId })
 
@@ -75,7 +75,6 @@ const getTokenBalances = async (address, block_num, tokenAddress) => {
 
     const options = { chain: "eth", address: address, to_block: block_num };
     const balances = await Moralis.Web3API.account.getTokenBalances(options);
-    
     let balance;
     for ( var i = 0; i < balances.length; i++){
         if ( balances[i].token_address == tokenAddress){
@@ -87,7 +86,6 @@ const getTokenBalances = async (address, block_num, tokenAddress) => {
     if (balance) {
         return balance;
     } else {
-        console.log(address, block_num, tokenAddress)
         return 0;
     }
 
@@ -133,7 +131,7 @@ const getCompundingToken = () => {
                     }
                     if (addresses.length >= 100) break;
                 }
-                for (var i = 50; i < 100; i++) {
+                for (var i = 0; i < 100; i+=2) {
                     let tempTransactionList = await getTokenTransfers(addresses[i]);
                     let block = [];
                     for (var j = 0; j < tempTransactionList.length; j++) {
@@ -171,22 +169,31 @@ const getCompundingToken = () => {
                                 };
                                 if (tempTransactionList[j].length == 1) {
                                     console.log(i)
-                                    blockObj = {
-                                        coinAddress : tempTransactionList[j][0].address,
-                                        walletAddress : addresses[i],
-                                        blocks : [
-                                            {
-                                                blockNumber : tempTransactionList[j][0].block_number * 1 - 2,
-                                                balance : currentBalance
-                                            },
-                                            {
-                                                blockNumber : tempTransactionList[j][0].block_number * 1 - 1,
-                                                balance : tempTransactionList[j][0].value
+                                    let balance1 = await getTokenBalances(addresses[i], tempTransactionList[j][0].block_number * 1 , tempTransactionList[j][0].address)
+                                    for( var y = 1; y < 25; y ++){
+                                        let balance2 = await getTokenBalances(addresses[i], tempTransactionList[j][0].block_number * 1 + y , tempTransactionList[j][0].address)
+                                        if (balance1 != balance2 && (balance1 != 0 || balance2 != 0)) {
+                                            blockObj = {
+                                                coinAddress : tempTransactionList[j][0].address,
+                                                walletAddress : addresses[i],
+                                                blocks : [
+                                                    {
+                                                        blockNumber : tempTransactionList[j][0].block_number * 1 + y - 1,
+                                                        balance : balance1
+                                                    },
+                                                    {
+                                                        blockNumber : tempTransactionList[j][0].block_number * 1 + y,
+                                                        balance : balance2
+                                                    }
+                                                   
+                                                ]
                                             }
-                                           
-                                        ]
+                                            block.push(blockObj)
+                                            break;
+                                        } else {
+                                            balance1 = balance2;
+                                        }
                                     }
-                                    block.push(blockObj)
                                 }
                             }
                         }
