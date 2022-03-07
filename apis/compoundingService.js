@@ -6,9 +6,9 @@ const fs = require('fs');
 
 const Web3Client = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"));
 
-const serverUrl = "https://yf629zawwibk.usemoralis.com:2053/server";
+const serverUrl = "https://53dgjokc0trq.usemoralis.com:2053/server";
 
-const appId = "d9NSLnMkVB2yKgeuYIP5qB12KIBcYlaKLiphzMl4";
+const appId = "Ya9oUVMjeupUa0Fvw2cZ4msiM7566PkaOi25IeRg";
 
 Moralis.start({ serverUrl, appId })
 
@@ -104,7 +104,6 @@ const getBalance = async (walletAddress, tokenAddress) => {
     })
     return balance;
 };
-
 const getCompundingToken = () => {
     return new Promise((resolve, reject) => {
         async function main() {
@@ -112,6 +111,13 @@ const getCompundingToken = () => {
                 var addresses = [];
                 let cnt = 0;
                 let compoundingTokenList = [];
+                let lastBlockNumber;
+                await Web3Client.eth.getBlockNumber()
+                .then( (res) => {
+                    lastBlockNumber = res;
+                }).catch((err) => {
+                    console.log(err);
+                });
                 while(1) {
                     cnt++;
                     URL = "https://etherscan.io/accounts/" + cnt.toString();
@@ -131,7 +137,7 @@ const getCompundingToken = () => {
                     }
                     if (addresses.length >= 100) break;
                 }
-                for (var i = 0; i < 100; i+=2) {
+                for (var i = 0; i < 100; i++) {
                     let tempTransactionList = await getTokenTransfers(addresses[i]);
                     let block = [];
                     for (var j = 0; j < tempTransactionList.length; j++) {
@@ -168,31 +174,37 @@ const getCompundingToken = () => {
                                     ]
                                 };
                                 if (tempTransactionList[j].length == 1) {
-                                    console.log(i)
                                     let balance1 = await getTokenBalances(addresses[i], tempTransactionList[j][0].block_number * 1 , tempTransactionList[j][0].address)
-                                    for( var y = 1; y < 25; y ++){
-                                        let balance2 = await getTokenBalances(addresses[i], tempTransactionList[j][0].block_number * 1 + y , tempTransactionList[j][0].address)
-                                        if (balance1 != balance2 && (balance1 != 0 || balance2 != 0)) {
-                                            blockObj = {
-                                                coinAddress : tempTransactionList[j][0].address,
-                                                walletAddress : addresses[i],
-                                                blocks : [
-                                                    {
-                                                        blockNumber : tempTransactionList[j][0].block_number * 1 + y - 1,
-                                                        balance : balance1
-                                                    },
-                                                    {
-                                                        blockNumber : tempTransactionList[j][0].block_number * 1 + y,
-                                                        balance : balance2
-                                                    }
-                                                   
-                                                ]
+                                    let last = await getTokenBalances(addresses[i], lastBlockNumber , tempTransactionList[j][0].address)
+                                    if ( balance1 != last ){
+                                        console.log(tempTransactionList[j][0])
+                                        for( var y = 1; y < 500; y ++){
+                                            let balance2 = await getTokenBalances(addresses[i], tempTransactionList[j][0].block_number * 1 + y  , tempTransactionList[j][0].address)
+                                            if (balance1 != balance2 && (balance1 != 0 || balance2 != 0)) {
+                                                blockObj = {
+                                                    coinAddress : tempTransactionList[j][0].address,
+                                                    walletAddress : addresses[i],
+                                                    blocks : [
+                                                        {
+                                                            blockNumber : tempTransactionList[j][0].block_number * 1 + y-1,
+                                                            balance : balance1
+                                                        },
+                                                        {
+                                                            blockNumber : tempTransactionList[j][0].block_number * 1 + y,
+                                                            balance : balance2
+                                                        }
+                                                       
+                                                    ]
+                                                }
+                                                block.push(blockObj)
+                                                break;
                                             }
-                                            block.push(blockObj)
-                                            break;
-                                        } else {
-                                            balance1 = balance2;
+                                            else{
+                                                balance1 = balance2
+                                            }
                                         }
+                                    } else {
+                                        continue;
                                     }
                                 }
                             }
@@ -212,6 +224,7 @@ const getCompundingToken = () => {
                         })
                     }
                 }
+                console.log('Finished!')
                 return resolve({ success : true , fileName : "CompoundingList.json" })
             } catch (error) {
                 console.log(error)
