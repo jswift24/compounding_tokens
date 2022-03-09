@@ -281,7 +281,7 @@ const getCompundingToken = () => {
                     let balance1 = await getTokenBalances(compoundingTokens[k + 1], compoundingTokens[k].block_number * 1, compoundingTokens[k].address)
                     let last = await getTokenBalances(compoundingTokens[k + 1], lastBlockNumber, compoundingTokens[k].address)
                     if (balance1 != last) {
-                        for (var y = 1; y < 120; y++) {
+                        for (var y = 1; y < 300; y++) {
                             let balance2 = await getTokenBalances(compoundingTokens[k + 1], compoundingTokens[k].block_number * 1 + y, compoundingTokens[k].address)
                             if (balance1 != balance2 && (balance1 != 0 || balance2 != 0)) {
                                 blockObj = {
