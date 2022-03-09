@@ -12,7 +12,7 @@ const appId = "Ya9oUVMjeupUa0Fvw2cZ4msiM7566PkaOi25IeRg";
 
 Moralis.start({ serverUrl, appId })
 
-
+// Get current balance
 const minABI = [
     // balanceOf
     {
@@ -32,6 +32,8 @@ const minABI = [
     }
 ];
 
+
+// Sort erc 20 token transaction list
 const sortTransactionList = (data) => {
     var result = [];
     var flag = [];
@@ -60,6 +62,7 @@ const sortTransactionList = (data) => {
     return result;
 }
 
+// Get Erc token transfer
 const getTokenTransfers = async (address) => {
 
     // get mainnet transfers for the current user
@@ -71,6 +74,7 @@ const getTokenTransfers = async (address) => {
     return transactionList;
 };
 
+// Get Erc20 token balance
 const getTokenBalances = async (address, block_num, tokenAddress) => {
 
     const options = { chain: "eth", address: address, to_block: block_num };
@@ -104,29 +108,81 @@ const getBalance = async (walletAddress, tokenAddress) => {
     })
     return balance;
 };
+
+// Get cokmpounding token list
 const getCompundingToken = () => {
-    return new Promise((resolve, reject) => {
-        async function main() {
-            try {
-                var addresses = [];
-                let cnt = 0;
-                let compoundingTokenList = [];
-                let lastBlockNumber;
-                await Web3Client.eth.getBlockNumber()
-                    .then((res) => {
-                        lastBlockNumber = res;
-                    }).catch((err) => {
-                        console.log(err);
-                    });
-                let protocols;
-                URL = "https://openapi.debank.com/v1/protocol/list";
-                await axios.get(URL).then(({data}) => {
-                    protocols = data;
+    async function main() {
+        try {
+            var addresses = [];
+            let compoundingTokenList = [];
+            let lastBlockNumber;
+            let topProtocolCnt;
+            let topWalletCnt;
+
+            let protocols;
+
+            // Last blocknumber
+            await Web3Client.eth.getBlockNumber()
+                .then((res) => {
+                    lastBlockNumber = res;
                 }).catch((err) => {
                     console.log(err);
                 });
-                for (var i = 0; i < 35; i++) {
-                    let protocolUrl = "https://api.debank.com/project/portfolios/user_list?id=" + protocols[i].id;
+
+            // Get Protocol list
+
+            URL = "https://openapi.debank.com/v1/protocol/list";
+            await axios.get(URL).then(({ data }) => {
+                protocols = data;
+            }).catch((err) => {
+                console.log(err);
+            });
+
+            fs.readFile('./ConfigurationParameters.json', 'utf-8', function (err, data) {
+                if (err) throw err
+
+                midConfiguration(JSON.parse(data));
+
+            })
+
+            async function midConfiguration(data) {
+                topProtocolCnt = data.topProtocolCnt;
+                topWalletCnt = data.topWalletCnt;
+
+                // Get Top 20 protocols
+
+                let temp = [];
+                for (var i = 0; i < protocols.length - 1; i++) {
+
+                    for (var j = i + 1; j < protocols.length; j++) {
+                        if (protocols[i].tvl * 1 < protocols[j].tvl * 1) {
+                            temp = protocols[j]
+                            protocols[j] = protocols[i];
+                            protocols[i] = temp;
+                        }
+                    }
+                }
+                let cnt = 0;
+                let topProtocol = [];
+                for (var k = 0; k < protocols.length; k++) {
+                    if (protocols[k].id != "polygon_staking") {
+                        if (protocols[k].chain == "eth") {
+                            topProtocol[cnt] = protocols[k]
+                            cnt++;
+                        }
+                    }
+                    if (cnt >= topProtocolCnt + 2) break;
+                }
+
+                fs.writeFile('./topProtocols.json', JSON.stringify(topProtocol), 'utf-8', function (err) {
+                    if (err) throw err
+                })
+                console.log("Top" + " " + topProtocolCnt + " " + "protocols was made into topProtocols.json")
+
+                // Get 100 top wallets
+                for (var i = 0; i < topProtocol.length; i++) {
+                    console.log(i)
+                    let protocolUrl = "https://api.debank.com/project/portfolios/user_list?id=" + topProtocol[i].id;
                     while (1) {
                         let address = [];
                         let sit = 0;
@@ -149,25 +205,30 @@ const getCompundingToken = () => {
                         });
                         let z = 0;
                         for (var x = 0; x < address.length; x++) {
-
                             let isContract = await Web3Client.eth.getCode(address[x])
                             if (isContract.length == 2) {
                                 addresses.push(address[x]);
                                 z++;
                             }
-                            if (z >= 5) {
+                            if (z >= topWalletCnt) {
                                 break;
                             }
                         }
                         break;
                     }
-                    if (addresses.length >= 100) {
+                    if (addresses.length >= topWalletCnt * topProtocolCnt) {
                         break;
                     }
                 }
+
+                fs.writeFile('./topWallets.json', JSON.stringify(addresses), 'utf-8', function (err) {
+                    if (err) throw err
+                })
+                console.log("Top" + " " + topWalletCnt * topProtocolCnt + " " + "wallets was made into topWallets.json")
+                let compoundingTokens = [];
                 for (var i = 0; i < 100; i++) {
                     let tempTransactionList = await getTokenTransfers(addresses[i]);
-                    let block = [];
+                    
                     for (var j = 0; j < tempTransactionList.length; j++) {
                         let tempBalance = 0;
                         if (tempTransactionList[j][0].address == addresses[i]) {
@@ -193,80 +254,85 @@ const getCompundingToken = () => {
                             }
                             if (flag == 0) {
                                 compoundingTokenList.push(tempTransactionList[j][0].address);
-
-                                let blockObj = {
-                                    coinAddress: "",
-                                    walletAddress: "",
-                                    blocks: [
-
-                                    ]
-                                };
-                                if (tempTransactionList[j].length == 1) {
-                                    let balance1 = await getTokenBalances(addresses[i], tempTransactionList[j][0].block_number * 1, tempTransactionList[j][0].address)
-                                    let last = await getTokenBalances(addresses[i], lastBlockNumber, tempTransactionList[j][0].address)
-                                    if (balance1 != last) {
-                                        for (var y = 1; y < 500; y++) {
-                                            let balance2 = await getTokenBalances(addresses[i], tempTransactionList[j][0].block_number * 1 + y, tempTransactionList[j][0].address)
-                                            if (balance1 != balance2 && (balance1 != 0 || balance2 != 0)) {
-                                                blockObj = {
-                                                    coinAddress: tempTransactionList[j][0].address,
-                                                    walletAddress: addresses[i],
-                                                    blocks: [
-                                                        {
-                                                            blockNumber: tempTransactionList[j][0].block_number * 1 + y - 1,
-                                                            balance: balance1
-                                                        },
-                                                        {
-                                                            blockNumber: tempTransactionList[j][0].block_number * 1 + y,
-                                                            balance: balance2
-                                                        }
-
-                                                    ]
-                                                }
-                                                block.push(blockObj)
-                                                break;
-                                            }
-                                            else {
-                                                balance1 = balance2
-                                            }
-                                        }
-                                    } else {
-                                        continue;
-                                    }
-                                }
+                                compoundingTokens.push(tempTransactionList[j][0], addresses[i]);
+                                console.log(compoundingTokenList.length + " " + "candidated compounding token was made")
+                                
                             }
                         }
                     }
-                    if (block.length > 0) {
-                        fs.readFile('./CompoundingList.json', 'utf-8', function (err, data) {
-                            if (err) throw err
+                }
 
-                            var arrayOfObjects = JSON.parse(data)
-                            arrayOfObjects.push(block)
+                fs.writeFile('./candidateCompoundingToken.json', JSON.stringify(compoundingTokenList), 'utf-8', function (err) {
+                    if (err) throw err
+                })
+                console.log("candidated compounding token was made into candidateCompoundingToken")
+                let block = [];
+                let compCnt = 0;
+                for (var k = 0; k < compoundingTokens.length; k = k + 2){
+                    block = []
+                    
+                    let blockObj = {
+                        coinAddress: "",
+                        walletAddress: "",
+                        blocks: [
 
-                            fs.writeFile('./CompoundingList.json', JSON.stringify(arrayOfObjects), 'utf-8', function (err) {
-                                if (err) throw err
-                            })
-                        })
+                        ]
+                    };
+                    let balance1 = await getTokenBalances(compoundingTokens[k + 1], compoundingTokens[k].block_number * 1, compoundingTokens[k].address)
+                    let last = await getTokenBalances(compoundingTokens[k + 1], lastBlockNumber, compoundingTokens[k].address)
+                    if (balance1 != last) {
+                        for (var y = 1; y < 120; y++) {
+                            let balance2 = await getTokenBalances(compoundingTokens[k + 1], compoundingTokens[k].block_number * 1 + y, compoundingTokens[k].address)
+                            if (balance1 != balance2 && (balance1 != 0 || balance2 != 0)) {
+                                blockObj = {
+                                    coinAddress: compoundingTokens[k].address,
+                                    walletAddress: compoundingTokens[k + 1],
+                                    blocks: [
+                                        {
+                                            blockNumber: compoundingTokens[k].block_number * 1 + y - 1,
+                                            balance: balance1
+                                        },
+                                        {
+                                            blockNumber: compoundingTokens[k].block_number * 1 + y,
+                                            balance: balance2
+                                        }
+
+                                    ]
+                                }
+                                block.push(blockObj)
+                                compCnt++;
+                                console.log(compCnt + " " + "Compounding token was made")
+                                break;
+                            }
+                            else {
+                                balance1 = balance2
+                            }
+                        }
+                    } else {
+                        continue;
                     }
                 }
-                return resolve({ success: true, fileName: "CompoundingList.json" })
-            } catch (error) {
-                console.log(error)
-                return resolve({ success: false })
-            }
-        }
-        main();
-    })
-}
+                // Write compounding token list into json
+                if (block.length > 0) {
+                    fs.readFile('./CompoundingList.json', 'utf-8', function (err, data) {
+                        if (err) throw err
 
-const extractLinks = $ => [
-    ...new Set(
-        $('tbody tr td a') // Select pagination links 
-            .map((_, a) => $(a).text()) // Extract the href (url) from each link 
-            .toArray() // Convert cheerio object to array 
-    ),
-];
+                        var arrayOfObjects = JSON.parse(data)
+                        arrayOfObjects.push(block)
+
+                        fs.writeFile('./CompoundingList.json', JSON.stringify(arrayOfObjects), 'utf-8', function (err) {
+                            if (err) throw err
+                        })
+                    })
+                }
+                console.log("All compounding tokens was made into CompoundingList.json")
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    main();
+}
 
 module.exports = {
     getCompundingToken
