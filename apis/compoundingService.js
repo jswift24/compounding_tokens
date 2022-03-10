@@ -157,10 +157,10 @@ const getCompundingToken = () => {
                 console.log(err);
             });
 
-            fs.readFile('./ConfigurationParameters.json', 'utf-8', function (err, data) {
+            fs.readFile('./config.json', 'utf-8', function (err, data) {
                 if (err) throw err
 
-                midConfiguration(JSON.parse(data));
+                const midconfig = midConfiguration(JSON.parse(data));
 
             })
             var block =[];
