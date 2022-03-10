@@ -253,7 +253,7 @@ const getCompundingToken = () => {
                             addresses.push(midAddress[y]);
                             console.log(midAddress[y])
                         }
-                        console.log(i + " " + "protocol: " + " " + "top 5 wallets" )
+                        console.log(i+1 + " " + "protocol: " + " " + "top" + " " +  topWalletCnt + " " + wallets" )
                         break;
                     }
                     if (addresses.length >= topWalletCnt * topProtocolCnt) {
