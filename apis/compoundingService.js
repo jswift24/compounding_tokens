@@ -247,7 +247,6 @@ const getCompundingToken = () => {
                 for (var i = 0; i < 100; i++) {
                     let tempTransactionList = await getTokenTransfers(addresses[i], lastBlockNumber);
                     for (var j = 0; j < tempTransactionList.length; j++) {
-                        console.log(tempTransactionList[j][0])
                         let tempBalance = 0;
                         if (tempTransactionList[j][0].address == addresses[i]) {
                             continue;
