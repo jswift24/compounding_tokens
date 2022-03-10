@@ -1,0 +1,5 @@
+<<<<<<< HEAD
+[{"coinAddress":"0x619beb58998ed2278e08620f97007e1116d5d25b","walletAddress":"0x4093fbe60ab50ab79a5bd32fa2adec255372f80e","blocks":[{"blockNumber":14337153,"balance":"141906681724625"},{"blockNumber":14337154,"balance":"141906681972813"}]},{"coinAddress":"0x030ba81f1c18d280636f32af80b9aad02cf0854e","walletAddress":"0x4093fbe60ab50ab79a5bd32fa2adec255372f80e","blocks":[{"blockNumber":14269152,"balance":"238068634598816632651120"},{"blockNumber":14269153,"balance":"238068634635484779213357"}]},{"coinAddress":"0x531842cebbdd378f8ee36d171d6cc9c4fcf475ec","walletAddress":"0x4093fbe60ab50ab79a5bd32fa2adec255372f80e","blocks":[{"blockNumber":14252443,"balance":"136121194157600"},{"blockNumber":14252444,"balance":"136121198765007"}]}]
+=======
+[]
+>>>>>>> adf1b106562e222edcdb378da5c10835b1c37209

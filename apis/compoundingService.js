@@ -114,6 +114,7 @@ const getCompundingToken = () => {
     async function main() {
         try {
             var addresses = [];
+            
             let compoundingTokenList = [];
             let lastBlockNumber;
             let topProtocolCnt;
@@ -138,13 +139,13 @@ const getCompundingToken = () => {
                 console.log(err);
             });
 
-            fs.readFile('./ConfigurationParameters.json', 'utf-8', function (err, data) {
+            fs.readFile('./config.json', 'utf-8', function (err, data) {
                 if (err) throw err
 
                 midConfiguration(JSON.parse(data));
 
             })
-
+            var block =[];
             async function midConfiguration(data) {
                 topProtocolCnt = data.topProtocolCnt;
                 topWalletCnt = data.topWalletCnt;
@@ -174,14 +175,13 @@ const getCompundingToken = () => {
                     if (cnt >= topProtocolCnt + 2) break;
                 }
 
-                fs.writeFile('./topProtocols.json', JSON.stringify(topProtocol), 'utf-8', function (err) {
+                fs.writeFile('./result/topProtocols.json', JSON.stringify(topProtocol), 'utf-8', function (err) {
                     if (err) throw err
                 })
-                console.log("Top" + " " + topProtocolCnt + " " + "protocols was made into topProtocols.json")
+                console.log("Top" + " " + topProtocolCnt + " " + "protocols was made into ./result/topProtocols.json")
 
                 // Get 100 top wallets
                 for (var i = 0; i < topProtocol.length; i++) {
-                    console.log(i)
                     let protocolUrl = "https://api.debank.com/project/portfolios/user_list?id=" + topProtocol[i].id;
                     while (1) {
                         let address = [];
@@ -221,14 +221,15 @@ const getCompundingToken = () => {
                     }
                 }
 
-                fs.writeFile('./topWallets.json', JSON.stringify(addresses), 'utf-8', function (err) {
-                    if (err) throw err
+                fs.writeFile('./result/topWallets.json', JSON.stringify(addresses), 'utf-8', function (err) {
+                    if (err)
+                        throw err;
                 })
-                console.log("Top" + " " + topWalletCnt * topProtocolCnt + " " + "wallets was made into topWallets.json")
+                console.log("Top" + " " + topWalletCnt * topProtocolCnt + " " + "wallets was made into ./result/topWallets.json")
                 let compoundingTokens = [];
                 for (var i = 0; i < 100; i++) {
                     let tempTransactionList = await getTokenTransfers(addresses[i]);
-                    
+                    console.log(tempTransactionList)
                     for (var j = 0; j < tempTransactionList.length; j++) {
                         let tempBalance = 0;
                         if (tempTransactionList[j][0].address == addresses[i]) {
@@ -262,16 +263,15 @@ const getCompundingToken = () => {
                     }
                 }
 
-                fs.writeFile('./candidateCompoundingToken.json', JSON.stringify(compoundingTokenList), 'utf-8', function (err) {
+                fs.writeFile('./result/candidateCompoundingToken.json', JSON.stringify(compoundingTokens), 'utf-8', function (err) {
                     if (err) throw err
                 })
-                console.log("candidated compounding token was made into candidateCompoundingToken")
-                let block = [];
+                console.log("candidated compounding token was made into ./result/candidateCompoundingToken")
+                
                 let compCnt = 0;
-                for (var k = 0; k < compoundingTokens.length; k = k + 2){
-                    block = []
-                    
-                    let blockObj = {
+                
+                for (var k = 0; k <  compoundingTokens.length; k = k + 2){
+                    blockObj = {
                         coinAddress: "",
                         walletAddress: "",
                         blocks: [
@@ -282,6 +282,10 @@ const getCompundingToken = () => {
                     let last = await getTokenBalances(compoundingTokens[k + 1], lastBlockNumber, compoundingTokens[k].address)
                     if (balance1 != last) {
                         for (var y = 1; y < 300; y++) {
+<<<<<<< HEAD
+                            
+=======
+>>>>>>> adf1b106562e222edcdb378da5c10835b1c37209
                             let balance2 = await getTokenBalances(compoundingTokens[k + 1], compoundingTokens[k].block_number * 1 + y, compoundingTokens[k].address)
                             if (balance1 != balance2 && (balance1 != 0 || balance2 != 0)) {
                                 blockObj = {
@@ -311,22 +315,15 @@ const getCompundingToken = () => {
                     } else {
                         continue;
                     }
-                }
-                // Write compounding token list into json
-                if (block.length > 0) {
-                    fs.readFile('./CompoundingList.json', 'utf-8', function (err, data) {
+                    // Write compounding token list into json
+                    fs.writeFile('./result/CompoundingList.json', JSON.stringify(block), 'utf-8', function (err) {
                         if (err) throw err
-
-                        var arrayOfObjects = JSON.parse(data)
-                        arrayOfObjects.push(block)
-
-                        fs.writeFile('./CompoundingList.json', JSON.stringify(arrayOfObjects), 'utf-8', function (err) {
-                            if (err) throw err
-                        })
                     })
+                       
                 }
-                console.log("All compounding tokens was made into CompoundingList.json")
+                console.log("All compounding tokens was made into ./result/CompoundingList.json")
             }
+            
         } catch (error) {
             console.log(error)
         }
