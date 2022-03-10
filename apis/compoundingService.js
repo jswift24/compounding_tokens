@@ -157,7 +157,7 @@ const getCompundingToken = () => {
                 console.log(err);
             });
 
-            fs.readFile('./ConfigurationParameters.json', 'utf-8', function (err, data) {
+            fs.readFile('./config.json', 'utf-8', function (err, data) {
                 if (err) throw err
 
                 midConfiguration(JSON.parse(data));
@@ -193,7 +193,7 @@ const getCompundingToken = () => {
                     if (cnt >= topProtocolCnt + 2) break;
                 }
 
-                fs.writeFile('./topProtocols.json', JSON.stringify(topProtocol), 'utf-8', function (err) {
+                fs.writeFile('./result/topProtocols.json', JSON.stringify(topProtocol), 'utf-8', function (err) {
                     if (err) throw err
                 })
                 console.log("Top" + " " + topProtocolCnt + " " + "protocols was made into topProtocols.json")
@@ -222,16 +222,38 @@ const getCompundingToken = () => {
 
                         });
                         let z = 0;
+                        let midTemp;
+                        var midAddress = [];
                         for (var x = 0; x < address.length; x++) {
                             let isContract = await Web3Client.eth.getCode(address[x])
                             if (isContract.length == 2) {
                                 addresses.push(address[x]);
+                                midAddress[z] = address[x];
                                 z++;
                             }
-                            if (z >= topWalletCnt) {
+                            if (z >= topWalletCnt * 2) {
                                 break;
                             }
                         }
+                        for (var t =0; t < midAddress.length - 1; t++){
+                            const options = { chain: "eth", address: midAddress[t]}
+                            const balances = await Moralis.Web3.getAllERC20(options);
+                            for (var l = t + 1; l < midAddress.length; l++){
+                                const options1 = { chain: "eth", address: midAddress[l]}
+                                const balances1 = await Moralis.Web3.getAllERC20(options1);
+                                if(balances < balances1){
+                                    midTemp = midAddress[l];
+                                    midAddress[l] = midAddress[t];
+                                    midAddress[t] = midTemp;
+                                }
+                            }
+                        }
+                        
+                        for (var y = 0; y < topWalletCnt; y++){
+                            addresses.push(midAddress[y]);
+                            console.log(midAddress[y])
+                        }
+                        console.log(i + " " + "protocol: " + " " + "top 5 wallets" )
                         break;
                     }
                     if (addresses.length >= topWalletCnt * topProtocolCnt) {
@@ -239,7 +261,7 @@ const getCompundingToken = () => {
                     }
                 }
 
-                fs.writeFile('./topWallets.json', JSON.stringify(addresses), 'utf-8', function (err) {
+                fs.writeFile('./result/topWallets.json', JSON.stringify(addresses), 'utf-8', function (err) {
                     if (err) throw err
                 })
                 console.log("Top" + " " + topWalletCnt * topProtocolCnt + " " + "wallets was made into topWallets.json")
@@ -280,7 +302,7 @@ const getCompundingToken = () => {
                     }
                 }
 
-                fs.writeFile('./candidateCompoundingToken.json', JSON.stringify(compoundingTokens), 'utf-8', function (err) {
+                fs.writeFile('./result/candidateCompoundingToken.json', JSON.stringify(compoundingTokens), 'utf-8', function (err) {
                     if (err) throw err
                 })
                 console.log("candidated compounding token was made into candidateCompoundingToken")
@@ -330,7 +352,7 @@ const getCompundingToken = () => {
                         continue;
                     }
                     // Write compounding token list into json
-                    fs.writeFile('./CompoundingList.json', JSON.stringify(block), 'utf-8', function (err) {
+                    fs.writeFile('./result/CompoundingList.json', JSON.stringify(block), 'utf-8', function (err) {
                         if (err) throw err
                     })
                        
