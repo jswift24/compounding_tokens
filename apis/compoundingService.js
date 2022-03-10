@@ -160,7 +160,7 @@ const getCompundingToken = () => {
             fs.readFile('./config.json', 'utf-8', function (err, data) {
                 if (err) throw err
 
-                midConfiguration(JSON.parse(data));
+                const midconfig = midConfiguration(JSON.parse(data));
 
             })
             var block =[];
@@ -269,7 +269,6 @@ const getCompundingToken = () => {
                 for (var i = 0; i < 100; i++) {
                     let tempTransactionList = await getTokenTransfers(addresses[i], lastBlockNumber);
                     for (var j = 0; j < tempTransactionList.length; j++) {
-                        console.log(tempTransactionList[j][0])
                         let tempBalance = 0;
                         if (tempTransactionList[j][0].address == addresses[i]) {
                             continue;
